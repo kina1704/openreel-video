@@ -41,10 +41,34 @@ export interface ExpressionContext {
   noise: (x: number) => number;
 }
 
+// SECURITY: This engine compiles user-supplied expressions with `new Function()`.
+// The whitelisted context only restricts ARG NAMES, not global access — compiled
+// code still sees `window`, `fetch`, `localStorage`, etc. Treat expressions in
+// project files as code execution: NEVER load .json projects from untrusted
+// sources without disabling expressions first (set ExpressionEngine.disabled=true).
+const MAX_EXPRESSION_LENGTH = 1000;
+const FORBIDDEN_PATTERNS = [
+  /\bwindow\b/,
+  /\bdocument\b/,
+  /\bfetch\b/,
+  /\bXMLHttpRequest\b/,
+  /\blocalStorage\b/,
+  /\bsessionStorage\b/,
+  /\bindexedDB\b/,
+  /\bimport\b/,
+  /\beval\b/,
+  /\bFunction\b/,
+  /\bconstructor\b/,
+  /\bglobalThis\b/,
+  /\bself\b/,
+];
+
 export class ExpressionEngine {
+  static disabled = false;
   private cache = new Map<string, Function>();
 
   evaluate(expression: string, context: ExpressionContext): any {
+    if (ExpressionEngine.disabled) return 0;
     if (!this.cache.has(expression)) {
       this.cache.set(expression, this.compile(expression));
     }
@@ -54,12 +78,25 @@ export class ExpressionEngine {
   }
 
   private compile(expression: string): Function {
+    if (expression.length > MAX_EXPRESSION_LENGTH) {
+      console.error("Expression exceeds maximum length, refusing to compile.");
+      return () => 0;
+    }
+    for (const pattern of FORBIDDEN_PATTERNS) {
+      if (pattern.test(expression)) {
+        console.error(
+          `Expression rejected (matches forbidden pattern ${pattern}).`,
+        );
+        return () => 0;
+      }
+    }
+
     const safeContext = this.createSafeContext();
 
     try {
       return new Function(
         ...Object.keys(safeContext),
-        `return (${expression});`,
+        `"use strict"; return (${expression});`,
       ).bind(null, ...Object.values(safeContext));
     } catch (error) {
       console.error("Expression compilation error:", error);

@@ -1,30 +1,23 @@
-import { usePostHog } from "posthog-js/react";
+// Telemetry stub. Upstream wired PostHog here; we removed the dependency to
+// shrink attack surface and avoid tracking users. Restore by reinstalling
+// posthog-js and re-importing if you want analytics.
 import { useCallback } from "react";
 
 type EventProperties = Record<string, string | number | boolean | null>;
 
 export function useAnalytics() {
-  const posthog = usePostHog();
-
-  const track = useCallback(
-    (event: string, properties?: EventProperties) => {
-      if (posthog) {
-        posthog.capture(event, properties);
-      }
-    },
-    [posthog]
-  );
+  const track = useCallback((_event: string, _properties?: EventProperties) => {
+    // no-op
+  }, []);
 
   const identify = useCallback(
-    (userId: string, properties?: EventProperties) => {
-      if (posthog) {
-        posthog.identify(userId, properties);
-      }
+    (_userId: string, _properties?: EventProperties) => {
+      // no-op
     },
-    [posthog]
+    [],
   );
 
-  return { track, identify, isEnabled: !!posthog };
+  return { track, identify, isEnabled: false };
 }
 
 export const AnalyticsEvents = {

@@ -7,16 +7,15 @@
 
 const isDev = import.meta.env.DEV;
 
-/** OpenReel cloud services */
-export const OPENREEL_CLOUD_URL = isDev
-  ? "http://localhost:8787"
-  : "https://openreel-cloud.niiyeboah1996.workers.dev";
+/** OpenReel cloud services. Set VITE_CLOUD_API_URL to your own backend. */
+export const OPENREEL_CLOUD_URL =
+  import.meta.env.VITE_CLOUD_API_URL ?? (isDev ? "http://localhost:8787" : "");
 
-/** OpenReel transcription / TTS service */
-export const OPENREEL_TTS_URL = "https://transcribe.openreel.video";
+/** OpenReel transcription / TTS service. Set VITE_TTS_URL to override. */
+export const OPENREEL_TTS_URL = import.meta.env.VITE_TTS_URL ?? "";
 
-/** OpenReel transcription service (GPU) */
-export const OPENREEL_TRANSCRIBE_URL = "https://cloud.openreel.video";
+/** OpenReel transcription service (GPU). Set VITE_TRANSCRIBE_URL to override. */
+export const OPENREEL_TRANSCRIBE_URL = import.meta.env.VITE_TRANSCRIBE_URL ?? "";
 
 /**
  * Third-party API base URLs.

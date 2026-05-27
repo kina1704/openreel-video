@@ -3,6 +3,7 @@ import {
   type TranscriptWord,
   type AudioSegmentMetrics,
 } from "@openreel/core";
+import { OPENREEL_CLOUD_URL } from "../config/api-endpoints";
 
 export interface HighlightResult {
   start: number;
@@ -28,7 +29,13 @@ const DEFAULT_PREFERENCES: HighlightPreferences = {
 
 type ProgressCallback = (phase: string, progress: number, message: string) => void;
 
-const API_BASE = import.meta.env.VITE_CLOUD_API_URL || "https://openreel-cloud.niiyeboah1996.workers.dev";
+const API_BASE = OPENREEL_CLOUD_URL;
+
+if (!API_BASE && import.meta.env.DEV) {
+  console.warn(
+    "[highlight-service] OPENREEL_CLOUD_URL is empty. Set VITE_CLOUD_API_URL to your backend; AI highlight extraction will fail until then. (Upstream default removed for security.)",
+  );
+}
 
 export async function extractHighlights(
   audioBuffer: AudioBuffer,
